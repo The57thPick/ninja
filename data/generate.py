@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 import csv
-import doctest
-import re
+import records
 import sys
 
 from enum import Enum
 from pathlib import Path
 from typing import Tuple
+from validate import name_and_status, is_valid
 
-import records
 
 CSV_DATA = Path('data/csv')
 TABLES = [
@@ -18,30 +17,6 @@ TABLES = [
     'ObstacleResult',
     'CourseResult'
 ]
-
-def name_and_status(entry: str) -> Tuple[str, str]:
-    """Get the athlete's name and shown status (S, PS, or NS) from a CSV entry.
-
-    Args:
-        entry: The athlete's name entry (e.g., "Max Grocki (NS)").
-
-    Returns:
-        (str, str): (name, shown status).
-
-    Examples:
-        >>> name_and_status("Micheal Burkett-Crist (NS)")
-        ('Micheal Burkett-Crist', 'NS')
-        >>> name_and_status("P.J. Granger")
-        ('P.J. Granger', 'S')
-        >>> name_and_status("Alex Dell'Aquila (NS)")
-        ("Alex Dell'Aquila", 'NS')
-        >>> name_and_status('Luciano Acuna Jr. (PS)')
-        ('Luciano Acuna Jr.', 'PS')
-        >>> name_and_status('Luciano Acuna Jr.')
-        ('Luciano Acuna Jr.', 'S')
-    """
-    m = re.compile('([^\(]+)(?:\((PS|NS)\))?').match(entry)
-    return m.group(1).strip(" ").strip(), m.group(2) if m.group(2) else 'S'
 
 
 def insert_ninja(db: records.Database, row: Tuple[str]) -> Tuple[str, int]:
@@ -75,11 +50,6 @@ def insert_ninja(db: records.Database, row: Tuple[str]) -> Tuple[str, int]:
     return shown, ninja_id
 
 if __name__ == '__main__':
-    # Run tests
-    failed, _ = doctest.testmod()
-    if failed:
-        sys.exit(1)
-
     # Reset the database and its tables.
     db = records.Database()  # Defaults to $DATABASE_URL.
     tx = db.transaction()
@@ -95,6 +65,8 @@ if __name__ == '__main__':
         with f.open('rU') as csv_file:
             reader = csv.reader(csv_file)
             headings = next(reader)  # Skip the headings
+            if not is_valid(list(reader), list(headings)):
+                sys.exit(1)
             for i, row in enumerate(reader):
                 shown, ninja_id = insert_ninja(db, row)
     tx.commit()
