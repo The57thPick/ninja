@@ -6,7 +6,11 @@ import sys
 from enum import Enum
 from pathlib import Path
 from typing import Tuple
-from validate import name_and_status, is_valid
+
+from util import (
+    name_and_status,
+    is_valid
+)
 
 
 CSV_DATA = Path('data/csv')
@@ -19,8 +23,8 @@ TABLES = [
 ]
 
 
-def insert_ninja(db: records.Database, row: Tuple[str]) -> Tuple[str, int]:
-    """Add a column to the Ninja table.
+def insert_ninja(db, row):
+    """Add a row to the Ninja table.
 
     `row` is CSV entry like
 
@@ -44,10 +48,20 @@ def insert_ninja(db: records.Database, row: Tuple[str]) -> Tuple[str, int]:
 
     # TODO: What if two competitors have the same first + last name?
     if not ninja_id:
-        ninja_id = db.query_file(
-            'data/sql/insert_ninja.sql', f=first, l=last, s=sex, a=age)
+        ninja_id = db.query_file('data/sql/insert_ninja.sql',
+            f=first, l=last, s=sex, a=age)
 
     return shown, ninja_id
+
+
+def insert_course(db, headings, info):
+    """Add a row to the Course table.
+    """
+    obstacles = (len(headings) - 4) / 2
+    course_id = db.query_file('data/sql/insert_course.sql',
+            city=info[0], cat=info[1], s=info[2], n=obstacles)
+    return course_id
+
 
 if __name__ == '__main__':
     # Reset the database and its tables.
@@ -66,8 +80,13 @@ if __name__ == '__main__':
             reader = csv.reader(csv_file)
             headings = next(reader)  # Skip the headings
             rows = list(reader)
-            if not is_valid(rows, list(headings)):
+
+            # Validate the CSV file
+            if not is_valid(rows, headings):
                 sys.exit(1)
+
+            # Insert course info
+            insert_course(db, headings, course_info)
             for i, row in enumerate(rows):
                 shown, ninja_id = insert_ninja(db, row)
     tx.commit()
