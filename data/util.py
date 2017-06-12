@@ -3,9 +3,7 @@ import difflib
 import re
 import sys
 
-from typing import Tuple, List
-
-def name_and_status(entry: str) -> Tuple[str, str]:
+def name_and_status(entry):
     """Get the athlete's name and shown status (S, PS, or NS) from a CSV entry.
 
     Args:
@@ -30,7 +28,7 @@ def name_and_status(entry: str) -> Tuple[str, str]:
     return m.group(1).strip(" ").strip(), m.group(2) if m.group(2) else 'S'
 
 
-def check_spelling(name: str, seen: List[str]) -> List[str]:
+def check_spelling(name, seen):
     """Look for names that could be mispellings of `name`.
 
     Examples:
@@ -44,7 +42,7 @@ def check_spelling(name: str, seen: List[str]) -> List[str]:
         matches.remove(name)
     return matches
 
-def is_valid(rows: List[List[str]], headings: List[str]) -> bool:
+def is_valid(rows, headings):
     """Validate the CSV file with the given `rows` and `headings`
 
     Returns:
