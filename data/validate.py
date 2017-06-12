@@ -44,7 +44,7 @@ def check_spelling(name: str, seen: List[str]) -> List[str]:
         matches.remove(name)
     return matches
 
-def is_valid(rows: List[Tuple[str]], headings: List[str]) -> bool:
+def is_valid(rows: List[List[str]], headings: List[str]) -> bool:
     """Validate the CSV file with the given `rows` and `headings`
 
     Returns:

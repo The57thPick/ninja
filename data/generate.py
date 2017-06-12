@@ -65,8 +65,9 @@ if __name__ == '__main__':
         with f.open('rU') as csv_file:
             reader = csv.reader(csv_file)
             headings = next(reader)  # Skip the headings
-            if not is_valid(list(reader), list(headings)):
+            rows = list(reader)
+            if not is_valid(rows, list(headings)):
                 sys.exit(1)
-            for i, row in enumerate(reader):
+            for i, row in enumerate(rows):
                 shown, ninja_id = insert_ninja(db, row)
     tx.commit()
