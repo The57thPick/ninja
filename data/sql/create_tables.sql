@@ -22,8 +22,8 @@ CREATE TABLE Course (
     course_id serial PRIMARY KEY,
     city text NOT NULL,
     category text NOT NULL,
-    num_obstacles smallserial NOT NULL,
-    season smallserial NOT NULL
+    num_obstacles integer NOT NULL,
+    season integer NOT NULL
 );
 
 /**
@@ -57,7 +57,7 @@ CREATE TABLE ObstacleResult (
 CREATE TABLE CourseResult (
     result_id serial PRIMARY KEY,
     duration real NOT NULL,
-    finish_point smallserial NOT NULL,
+    finish_point integer NOT NULL,
     completed boolean NOT NULL,
     course_id integer references Course(course_id),
     ninja_id integer references Ninja(ninja_id)

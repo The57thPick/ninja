@@ -56,11 +56,33 @@ def insert_ninja(db, row):
 
 def insert_course(db, headings, info):
     """Add a row to the Course table.
+
+    Args:
+        headings (List[str]): headings for the current CSV file.
+        info (List[str]): [city, category, season].
+
+    Returns:
+        int: The ID of the current course.
     """
     obstacles = (len(headings) - 4) / 2
     course_id = db.query_file('data/sql/insert_course.sql',
-            city=info[0], cat=info[1], s=info[2], n=obstacles)
-    return course_id
+            city=info[0], cat=info[1], s=info[2], n=obstacles).all()
+    return course_id[0].course_id
+
+def insert_obstacles(db, row, info, course_id):
+    """Add a row to the Obstacle table.
+
+    Args:
+        info (list): [city, category, season]
+
+    Returns:
+        int: The ID of the current course.
+    """
+    for i in range(3, len(row) - 2):  # Skip The first 3 and last 2 columns.
+        name = row[i]
+        if name.startswith('Transition'):  # It's a transition column.
+            continue
+        db.query_file('data/sql/insert_obstacle.sql', title=name, id=course_id)
 
 
 if __name__ == '__main__':
@@ -86,7 +108,8 @@ if __name__ == '__main__':
                 sys.exit(1)
 
             # Insert course info
-            insert_course(db, headings, course_info)
+            course_id = insert_course(db, headings, course_info)
+            insert_obstacles(db, headings, course_info, course_id)
             for i, row in enumerate(rows):
                 shown, ninja_id = insert_ninja(db, row)
     tx.commit()
