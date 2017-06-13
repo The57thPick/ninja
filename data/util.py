@@ -3,6 +3,24 @@ import difflib
 import re
 import sys
 
+
+def is_number(s):
+    """Determine if the string `s` is a number.
+
+    Examples:
+        >>> is_number('5')
+        True
+        >>> is_number('5.5')
+        True
+        >>> is_number('foo')
+        False
+    """
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
 def name_and_status(entry):
     """Get the athlete's name and shown status (S, PS, or NS) from a CSV entry.
 
@@ -52,20 +70,47 @@ def is_valid(rows, headings):
     expected_length = len(headings)
     for i, row in enumerate(rows):
         idx = i + 2
-        # Check for missing columns
+        name, shown = name_and_status(row[0])
+
+        # Check for missing columns.
         if len(row) != expected_length:
             print('Length mismatch ({0} vs. expected {1}) at row = {2}'.format(
                 len(row), expected_length, idx))
             return False
 
-        # Check for transitions listed as failure points
+        # Check for transitions listed as failure points.
         for j, value in enumerate(row):
             if value == 'F' and headings[j].startswith('Transition'):
                 print('Invalid failure point at row = {0}'.format(idx))
                 return False
 
-        # Warn about potential typos
-        name, shown = name_and_status(row[0])
+        c = 3
+        t = 0
+        while row[c] not in  ('', 'F') and c < expected_length - 2:
+            t += float(row[c])
+            c += 1
+
+        # If a competitor failed the course, their last attempted obstacle
+        # should not have an associated duraton.
+        if row[-1] == 'Failed':
+            if (c - 1 > 2) and not headings[c - 1].startswith('Transition'):
+                print('Time for failed obstacle at row = {0}'.format(idx))
+                print(row[c - 1])
+                return False
+
+        # A competitor's splits should sum to their total time.
+        try:
+            if row[-2] and shown not in ('PS', 'NS'):
+                observed = round(float(row[-2]), 2)
+                expected = round(t, 2)
+                if observed != expected:
+                    print('{0} != {1} at row = {2}'.format(t, observed, idx))
+                    return False
+        except ValueError:
+            print('Bad finish time ({0}) at row = {1}'.format(row[-2], idx))
+            return False
+
+        # Warn about potential typos.
         matches = check_spelling(name, past_names)
         if matches:
             print("{} - {}, misspelled?".format(name, matches))

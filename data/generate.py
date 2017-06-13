@@ -5,11 +5,11 @@ import sys
 
 from enum import Enum
 from pathlib import Path
-from typing import Tuple
 
 from util import (
     name_and_status,
-    is_valid
+    is_valid,
+    is_number
 )
 
 
@@ -42,14 +42,16 @@ def insert_ninja(db, row):
         return '', -1
 
     first, last = name.split(' ', 1)
-    ninja_id = db.query(
+    out = db.query(
         'SELECT ninja_id FROM Ninja WHERE first_name=:f AND last_name=:l',
         f=first, l=last).all()
 
     # TODO: What if two competitors have the same first + last name?
-    if not ninja_id:
+    if not out:
         ninja_id = db.query_file('data/sql/insert_ninja.sql',
-            f=first, l=last, s=sex, a=age)
+            f=first, l=last, s=sex, a=age).all()[0].ninja_id
+    else:
+        ninja_id = out[0].ninja_id
 
     return shown, ninja_id
 
@@ -85,6 +87,55 @@ def insert_obstacles(db, row, info, course_id):
         db.query_file('data/sql/insert_obstacle.sql', title=name, id=course_id)
 
 
+def insert_obstacle_results(db, row, nid, cid, shown, headings):
+    """Add rows to the ObstacleResult table.
+
+    Args:
+        nid (int): An ID of a column in the Ninja table.
+        cid (int) An ID of a column in the Course table.
+        shown (str): "S", "PS" or "NS".
+        headers (list): The CSV headers.
+    """
+    if shown == 'NS':  # There are no results.
+        return
+    elif shown == 'PS':  # There are partial results.
+        print('Skipping PS ...')
+        # TODO: Handle PS (alter FAILED_IDS?)
+        return
+    i = 0
+    while i < len(headings) and nid not in FAILED_IDS:
+        header = headings[i]
+        if header == 'Gender' or header.startswith('Transition'):
+            # If the current column is either 'Gender' or 'Transition', we know
+            # that the next column's header (i + 1) will be the obstacle label.
+            name = headings[i + 1]
+            out = db.query(
+                """
+                SELECT obstacle_id FROM Obstacle
+                WHERE (title=:title AND course_id=:id)
+                """, title=name, id=cid).all()
+            # Given that the current header is 'Gender' or 'Transition', we
+            # know that the value at the next column will be the time.
+            time = row[i + 1]
+            completed = is_number(time)
+            if not completed:
+                FAILED_IDS.append(nid)
+                time = 0
+            if header == 'Gender':
+                # This is the first obstacle and therefore is the only one
+                # without a transition.
+                transition = 0
+                i += 1
+            else:
+                transition = row[i]
+                i += 2
+            db.query_file('data/sql/insert_obstacle_result.sql', nid=nid,
+                dur=time, trans=transition, comp=completed,
+                obsid=out[0].obstacle_id)
+        else:
+            i += 1
+
+
 if __name__ == '__main__':
     # Reset the database and its tables.
     db = records.Database()  # Defaults to $DATABASE_URL.
@@ -93,12 +144,12 @@ if __name__ == '__main__':
         db.query('DROP TABLE IF EXISTS {0} CASCADE;'.format(table))
     db.query_file('data/sql/create_tables.sql')
 
-    # Insert data
     for f in CSV_DATA.glob('**/*.csv'):
         path = str(f)
         course_info = path.strip('.csv').split('-')
         print('Reading {} ...'.format(path.split('/')[-1]))
         with f.open('rU') as csv_file:
+            FAILED_IDS = []
             reader = csv.reader(csv_file)
             headings = next(reader)  # Skip the headings
             rows = list(reader)
@@ -107,9 +158,11 @@ if __name__ == '__main__':
             if not is_valid(rows, headings):
                 sys.exit(1)
 
-            # Insert course info
+            # Insert data
             course_id = insert_course(db, headings, course_info)
             insert_obstacles(db, headings, course_info, course_id)
             for i, row in enumerate(rows):
                 shown, ninja_id = insert_ninja(db, row)
+                insert_obstacle_results(
+                    db, row, ninja_id, course_id, shown, headings)
     tx.commit()

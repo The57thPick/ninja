@@ -44,8 +44,8 @@ CREATE TABLE Obstacle (
  */
 CREATE TABLE ObstacleResult (
     result_id serial PRIMARY KEY,
-    transition real NOT NULL,
-    duration real,
+    transition decimal NOT NULL,
+    duration decimal,
     completed boolean NOT NULL,
     obstacle_id integer references Obstacle(obstacle_id),
     ninja_id integer references Ninja(ninja_id)
