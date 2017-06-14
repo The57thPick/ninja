@@ -46,7 +46,7 @@ class Obstacle(BaseModel):
     """
     obstacle_id = PrimaryKeyField()
     title = TextField()
-    course_id = ForeignKeyField(Course, to_field='course_id')
+    course = ForeignKeyField(Course, to_field='course_id')
 
 
 class ObstacleResult(BaseModel):
@@ -56,8 +56,8 @@ class ObstacleResult(BaseModel):
     transition = DecimalField()
     duration = DecimalField()
     completed = BooleanField()
-    obstacle_id = ForeignKeyField(Obstacle, to_field='obstacle_id')
-    ninja_id = ForeignKeyField(Ninja, to_field='ninja_id')
+    obstacle = ForeignKeyField(Obstacle, to_field='obstacle_id')
+    ninja = ForeignKeyField(Ninja, to_field='ninja_id')
 
 
 class CourseResult(BaseModel):
@@ -67,5 +67,5 @@ class CourseResult(BaseModel):
     duration = DecimalField()
     finish_point = IntegerField()
     completed = BooleanField()
-    course_id = ForeignKeyField(Course, to_field='course_id')
-    ninja_id = ForeignKeyField(Ninja, to_field='ninja_id')
+    course = ForeignKeyField(Course, to_field='course_id')
+    ninja = ForeignKeyField(Ninja, to_field='ninja_id')
