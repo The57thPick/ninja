@@ -69,9 +69,8 @@ def insert_course(db, headings, info):
     """
     city = info[0] if info[0] != 'Stage' else 'Las Vegas'
     cat = info[1] if not is_number(info[1]) else 'Stage ' + info[1]
-    obstacles = (len(headings) - 4) / 2
     course_id = db.query_file('data/sql/insert_course.sql',
-            city=city, cat=cat, s=info[2], n=obstacles).all()
+            city=city, cat=cat, s=info[2]).all()
     return course_id[0].course_id
 
 
@@ -140,7 +139,7 @@ def insert_obstacle_results(db, row, nid, cid, shown, headings):
             i += 1
 
 
-def insert_course_result(db, row, cid, nid, shown):
+def insert_course_result(db, row, cid, nid, shown, obstacles):
     """Add columns to the CourseResult table.
 
     Args:
@@ -156,12 +155,7 @@ def insert_course_result(db, row, cid, nid, shown):
     results = db.query_file('data/sql/obstacles_by_ninja.sql',
         nid=nid, comp=completed, crid=cid).all()[0].count
 
-    obstacles = db.query(
-        '''
-        SELECT num_obstacles FROM Course
-        WHERE (course_id=:cid)
-        ''', cid=cid).all()[0].num_obstacles
-
+    # Calculate the finish point.
     finish = finish_point(row, shown, results, obstacles, completed)
 
     db.query_file('data/sql/insert_course_result.sql',
@@ -192,11 +186,13 @@ if __name__ == '__main__':
                 sys.exit(1)
 
             # Insert data
+            obstacles = (len(headings) - 4) / 2
             course_id = insert_course(db, headings, course_info)
             insert_obstacles(db, headings, course_info, course_id)
             for i, row in enumerate(rows):
                 shown, ninja_id = insert_ninja(db, row)
                 insert_obstacle_results(
                     db, row, ninja_id, course_id, shown, headings)
-                insert_course_result(db, row, course_id, ninja_id, shown)
+                insert_course_result(
+                    db, row, course_id, ninja_id, shown, obstacles)
     tx.commit()

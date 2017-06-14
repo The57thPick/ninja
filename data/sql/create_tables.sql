@@ -22,7 +22,6 @@ CREATE TABLE Course (
     course_id serial PRIMARY KEY,
     city text NOT NULL,
     category text NOT NULL,
-    num_obstacles integer NOT NULL,
     season integer NOT NULL
 );
 
