@@ -21,6 +21,7 @@ def is_number(s):
     except ValueError:
         return False
 
+
 def name_and_status(entry):
     """Get the athlete's name and shown status (S, PS, or NS) from a CSV entry.
 
@@ -59,6 +60,53 @@ def check_spelling(name, seen):
     if matches and name in matches:
         matches.remove(name)
     return matches
+
+
+def finish_point(row, shown, results, obstacles, completed):
+    """Extract a failure point (i.e., which obstacle) from a given row.
+
+    Args:
+        shown (str): "S", "PS" or "NS".
+        results (int): The number of completed obstacles.
+        completed (bool): True if the course was completed and False otherwise.
+
+    Returns:
+        int: An integer representing the failure point (e.g., 3 for the third
+             obstacle).
+    """
+    if results or completed:
+        # If completed is True, the course was completed and thus there is no
+        # fail point. If completed is False, then the fail point is 1 +
+        # <# of completed obstacles>.
+        finish_point = obstacles if completed else results + 1
+    else:
+        # Ignore the first 3 columns (Name, Age and Sex) and the last 2 (Total
+        # and Completed).
+        data = row[3:-2][0::2]
+        if shown == "NS" and "F" in data:
+            # The position of "F" indicates the failure point. E.g.,
+            # [0, 1, 2, 'F', None, None] => 4th obstacle.
+            finish_point = data.index("F") + 1
+        elif shown == "S":
+            # In this case, there are no results but shown == "S". Thus, the
+            # fail point is the first obstacle.
+            finish_point = 1
+        elif shown == "PS":
+            # In this case, there will be N blank columns before we start
+            # recording data - e.g., [None, None, 1, 3, None]. Here, the fail
+            # point is the 4th obstacle (index 3).
+            offset = -1
+            for element in reversed(data):
+                if not element:
+                    offset += 1
+                else:
+                    break
+            finish_point = len(data) - offset
+        else:
+            finish_point = -1
+
+    return finish_point
+
 
 def is_valid(rows, headings):
     """Validate the CSV file with the given `rows` and `headings`

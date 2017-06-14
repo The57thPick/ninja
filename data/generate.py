@@ -9,7 +9,8 @@ from pathlib import Path
 from util import (
     name_and_status,
     is_valid,
-    is_number
+    is_number,
+    finish_point
 )
 
 
@@ -66,10 +67,13 @@ def insert_course(db, headings, info):
     Returns:
         int: The ID of the current course.
     """
+    city = info[0] if info[0] != 'Stage' else 'Las Vegas'
+    cat = info[1] if not is_number(info[1]) else 'Stage ' + info[1]
     obstacles = (len(headings) - 4) / 2
     course_id = db.query_file('data/sql/insert_course.sql',
-            city=info[0], cat=info[1], s=info[2], n=obstacles).all()
+            city=city, cat=cat, s=info[2], n=obstacles).all()
     return course_id[0].course_id
+
 
 def insert_obstacles(db, row, info, course_id):
     """Add a row to the Obstacle table.
@@ -136,6 +140,34 @@ def insert_obstacle_results(db, row, nid, cid, shown, headings):
             i += 1
 
 
+def insert_course_result(db, row, cid, nid, shown):
+    """Add columns to the CourseResult table.
+
+    Args:
+        nid (int): An ID of a column in the Ninja table.
+        cid (int) An ID of a column in the Course table.
+        shown (str): "S", "PS" or "NS".
+    """
+    # time is the second-to-last column.
+    time = row[-2] or None
+    # completed is the last column.
+    completed = row[-1] == 'Completed'
+
+    results = db.query_file('data/sql/obstacles_by_ninja.sql',
+        nid=nid, comp=completed, crid=cid).all()[0].count
+
+    obstacles = db.query(
+        '''
+        SELECT num_obstacles FROM Course
+        WHERE (course_id=:cid)
+        ''', cid=cid).all()[0].num_obstacles
+
+    finish = finish_point(row, shown, results, obstacles, completed)
+
+    db.query_file('data/sql/insert_course_result.sql',
+        crid=cid, nid=nid, dur=time, fp=finish, comp=completed).all()
+
+
 if __name__ == '__main__':
     # Reset the database and its tables.
     db = records.Database()  # Defaults to $DATABASE_URL.
@@ -145,9 +177,9 @@ if __name__ == '__main__':
     db.query_file('data/sql/create_tables.sql')
 
     for f in CSV_DATA.glob('**/*.csv'):
-        path = str(f)
-        course_info = path.strip('.csv').split('-')
-        print('Reading {} ...'.format(path.split('/')[-1]))
+        base = f.parts[-1]
+        course_info = base.strip('.csv').split('-')
+        print('Reading {} ...'.format(base))
         with f.open('rU') as csv_file:
             FAILED_IDS = []
             reader = csv.reader(csv_file)
@@ -156,6 +188,7 @@ if __name__ == '__main__':
 
             # Validate the CSV file
             if not is_valid(rows, headings):
+                tx.rollback()
                 sys.exit(1)
 
             # Insert data
@@ -165,4 +198,5 @@ if __name__ == '__main__':
                 shown, ninja_id = insert_ninja(db, row)
                 insert_obstacle_results(
                     db, row, ninja_id, course_id, shown, headings)
+                insert_course_result(db, row, course_id, ninja_id, shown)
     tx.commit()

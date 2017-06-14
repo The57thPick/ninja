@@ -56,7 +56,7 @@ CREATE TABLE ObstacleResult (
  */
 CREATE TABLE CourseResult (
     result_id serial PRIMARY KEY,
-    duration real NOT NULL,
+    duration decimal,
     finish_point integer NOT NULL,
     completed boolean NOT NULL,
     course_id integer references Course(course_id),
