@@ -1,18 +1,10 @@
-import os
-import urllib.parse as urlparse
+import hug
 
-import psycopg2
+from data.models import Ninja
 
-print(os.environ['DATABASE_URL'])
-'''
-urlparse.uses_netloc.append('postgres')
-url = urlparse.urlparse(os.environ['DATABASE_URL'])
 
-conn = psycopg2.connect(
-    database=url.path[1:],
-    user=url.username,
-    password=url.password,
-    host=url.hostname,
-    port=url.port
-)
-'''
+@hug.get(examples='first_name=Brent&last_name=Steffensen')
+def rating(first_name: hug.types.text, last_name: hug.types.text):
+    """Returns the given competitor's Ninja Rating.
+    """
+    return {'speed': '', 'consistency': '', 'success': ''}
