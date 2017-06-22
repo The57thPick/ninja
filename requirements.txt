@@ -1,3 +1,2 @@
 hug==2.3.0
-peewee==2.8.5
 records==0.5.0
