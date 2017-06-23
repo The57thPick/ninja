@@ -17,12 +17,16 @@ CREATE TABLE Ninja (
  * Course represents an individual ANW course.
  *
  * `category` is one of "Qualifying", "Finals", or a stage number (1 - 4).
+ *
+ * `size` can be NULL because we don't know it until we've counted the number
+ * of obstacles.
  */
 CREATE TABLE Course (
     course_id serial PRIMARY KEY,
     city text NOT NULL,
     category text NOT NULL,
-    season integer NOT NULL
+    season integer NOT NULL,
+    size integer
 );
 
 /**

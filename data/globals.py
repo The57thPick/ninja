@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-import hug
-import records
-
-DB = records.Database()  # Defaults to $DATABASE_URL.
-
 SEASONS = [1, 2, 3, 4, 5, 6, 7, 8]
 TYPE_2_INT = {
     "N/A": 0,
@@ -62,14 +56,3 @@ FINISH_2_NAME = {
     12.0: "Stage 4 (0 obstacles)",
     12.1: "Stage 4 (complete)",
 }
-
-
-@hug.get(examples='first=Brent&last=Steffensen')
-def rating(first: hug.types.text, last: hug.types.text, hug_timer=3):
-    """Returns the given competitor's Ninja Rating.
-    """
-    out = DB.query(
-        "SELECT * FROM Ninja WHERE (first_name=:f AND last_name=:l)",
-        f=first, l=last).all()[0]
-    speed, consistency, success = 0, 0, 0
-    return {'speed': speed, 'consistency': consistency, 'success': success, 'took': float(hug_timer)}

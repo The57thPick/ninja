@@ -74,7 +74,7 @@ def insert_course(db, headings, info):
     return course_id[0].course_id
 
 
-def insert_obstacles(db, row, info, course_id):
+def insert_obstacles(db, row, info, cid):
     """Add a row to the Obstacle table.
 
     Args:
@@ -83,11 +83,15 @@ def insert_obstacles(db, row, info, course_id):
     Returns:
         int: The ID of the current course.
     """
+    size = 0
     for i in range(3, len(row) - 2):  # Skip The first 3 and last 2 columns.
         name = row[i]
         if name.startswith('Transition'):  # It's a transition column.
             continue
-        db.query_file('data/sql/insert_obstacle.sql', title=name, id=course_id)
+        db.query_file('data/sql/insert_obstacle.sql', title=name, id=cid)
+        size += 1
+    db.query(
+        'UPDATE Course SET size = :s WHERE course_id = :id;', s=size, id=cid)
 
 
 def insert_obstacle_results(db, row, nid, cid, shown, headings):
