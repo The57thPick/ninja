@@ -8,7 +8,6 @@ import records
 from util import (
     query_file,
     name_and_status,
-    is_valid,
     is_number,
     finish_point,
     SEASONS,
@@ -244,11 +243,6 @@ if __name__ == '__main__':
             reader = csv.reader(csv_file)
             headings = next(reader)  # Skip the headings
             rows = list(reader)
-
-            # Validate the CSV file
-            if not is_valid(rows, headings):
-                tx.rollback()
-                sys.exit(1)
 
             # Insert data
             obstacles = (len(headings) - 4) / 2
