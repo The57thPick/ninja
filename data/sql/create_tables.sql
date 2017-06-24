@@ -65,3 +65,22 @@ CREATE TABLE CourseResult (
     course_id integer references Course(course_id),
     ninja_id integer references Ninja(ninja_id)
 );
+
+/**
+ * CareerSummary provides a high-level view of a competitor's career, including
+ * the number of courses completed (qualifying, finals, and Mount Midoriyama
+ * stages), the number of seasons competed, their best finish, and their Ninja
+ * Rating.
+ */
+CREATE TABLE CareerSummary (
+    summary_id serial PRIMARY KEY,
+    best_finish text NOT NULL,
+    speed decimal NOT NULL,
+    success decimal NOT NULL,
+    consistency decimal NOT NULL,
+    seasons integer NOT NULL,
+    qualifying integer NOT NULL,
+    finals integer NOT NULL,
+    stages integer NOT NULL,
+    ninja_id integer references Ninja(ninja_id)
+);

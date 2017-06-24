@@ -1,5 +1,5 @@
 /**
- *
+ * Get the number of attempted obstacles by competitor.
  */
 SELECT COUNT(*) FROM ObstacleResult
 JOIN Obstacle

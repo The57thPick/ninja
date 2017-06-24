@@ -1,26 +1,31 @@
 #!/usr/bin/env python3
 import csv
-import records
+import pathlib
 import sys
 
-from enum import Enum
-from pathlib import Path
+import records
 
 from util import (
+    query_file,
     name_and_status,
     is_valid,
     is_number,
-    finish_point
+    finish_point,
+    SEASONS,
+    TYPE_2_INT,
+    INT_2_TYPE,
+    FINISH_2_NAME
 )
 
 
-CSV_DATA = Path('data/csv')
+CSV_DATA = pathlib.Path('data/csv')
 TABLES = [
     'Ninja',
     'Course',
     'Obstacle',
     'ObstacleResult',
-    'CourseResult'
+    'CourseResult',
+    'CareerSummary'
 ]
 
 
@@ -166,6 +171,62 @@ def insert_course_result(db, row, cid, nid, shown, obstacles):
         crid=cid, nid=nid, dur=time, fp=finish, comp=completed).all()
 
 
+def insert_summary(db):
+    """Insert a row into the CareerSummary table.
+    """
+    # Get all course results for ninja_id.
+    n = len(TYPE_2_INT)
+    for row in db.query('SELECT ninja_id FROM Ninja').all():
+        ninja_id = row.ninja_id
+        completes = [0] * n
+        finishes = [0] * n
+        finish_scores = [0] * n
+        seasons = set()
+        trend = []
+        places = []
+
+        # Walk through their career history and record course finishes.
+        for ret in query_file(db, 'results_by_ninja.sql', nid=ninja_id):
+            int_type = TYPE_2_INT[ret.category]
+            type_idx = int(int_type / 2) - 1
+            seasons.add(ret.season)
+            if ret.completed:
+                # The course was completed, so there's no fail point.
+                completes[type_idx] += 1
+                point = ret.size
+            else:
+                # The course wasn't completed, so there's a fail point.
+                point = ret.finish_point - 1
+            finishes[type_idx] += int_type + 0.1 * point
+            finish_scores[type_idx] += int_type + point
+            trend.append(point)
+
+            # Record the fastest competitor's on each obstacle for this course.
+            obs = query_file(db, 'obstacles_by_course.sql', id=ret.course_id)
+            for ob in obs:
+                leaders = [l.ninja_id for l in query_file(db, 'leaders.sql',
+                    obs_id=ob.obstacle_id)]
+                if ninja_id in leaders:
+                    places.append(leaders.index(ninja_id) + 1)
+                else:
+                    places.append(0)
+
+        total = sum(trend) if trend else 0
+        n_seasons = len(seasons)
+        summary_id = query_file(db, 'insert_summary.sql',
+            nid=ninja_id,
+            best=FINISH_2_NAME.get(max(finishes)),
+            speed=3 * sum(x > 0 for x in places) - (sum(places) / len(places)),
+            success=4 * max(finish_scores),
+            consistency=total * n_seasons,
+            seasons=n_seasons,
+            q=completes[0],
+            f=completes[1],
+            s=completes[2])
+
+    return summary_id
+
+
 if __name__ == '__main__':
     # Reset the database and its tables.
     db = records.Database()  # Defaults to $DATABASE_URL.
@@ -199,4 +260,8 @@ if __name__ == '__main__':
                     db, row, ninja_id, course_id, shown, headings)
                 insert_course_result(
                     db, row, course_id, ninja_id, shown, obstacles)
+
+    print('Inserting summaries ...')
+    insert_summary(db)
+
     tx.commit()
