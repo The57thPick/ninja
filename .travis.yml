@@ -9,5 +9,5 @@ script:
   - python data/validate.py
 after_success:
     # Update the database on tags.
-    # $DATABASE_URL is set as an environment.
+    # $DATABASE_URL is set as an environment variable on Travis CI.
   - test -n "$TRAVIS_TAG" && python generate.py
