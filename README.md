@@ -1,4 +1,4 @@
-# ninjaref / data
+# ninjaref / data [![Build Status](https://travis-ci.org/ninjaref/data.svg?branch=master)](https://travis-ci.org/ninjaref/data)
 
 This repository contains granular, hand-collected data on American Ninja Warrior runs. We track competitors across seasons, courses and obstacles&mdash;allowing for detailed analysis and comparisons. You can read more about the [project here](https://jdkato.github.io/2016/12/21/anw7-a-look-back-at-an-historic-season.html).
 
