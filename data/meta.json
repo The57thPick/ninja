@@ -1,8 +1,77 @@
-[
-  {
-    "name": "Joe Moravsky",
+{
+  "Brent Steffensen": {
+    "instagram": "brentsteffensen",
+    "occupation": "Gym Owner",
+    "twitter": "BrentSteffensen"
+  },
+  "CJ Maico": {
+    "instagram": "",
+    "occupation": "Zookeeper",
+    "twitter": "ninja_gibbon"
+  },
+  "Daniel Gil": {
+    "instagram": "kingdom_ninja",
+    "occupation": "Worship leader",
+    "twitter": "KingdomNinja_"
+  },
+  "Dillon Gates": {
+    "instagram": "dillon_gates",
+    "occupation": "Parkour Athlete",
+    "twitter": "ANWdillongates"
+  },
+  "Evan Newpher": {
+    "instagram": "enewp",
+    "occupation": "Zookeeper",
+    "twitter": "OSUEvan89"
+  },
+  "Ian Waggoner": {
+    "instagram": "",
+    "occupation": "",
+    "twitter": "ninja_armwrstlr"
+  },
+  "Jeremiah Morgan": {
+    "instagram": "",
+    "occupation": "Minister",
+    "twitter": ""
+  },
+  "Joe Moravsky": {
+    "instagram": "joemoravsky",
     "occupation": "Meteorologist",
-    "twitter": "JoeMoravsky",
-    "instagram": "joemoravsky"
+    "twitter": "JoeMoravsky"
+  },
+  "Johnathan Parr": {
+    "instagram": "",
+    "occupation": "Personal Trainer",
+    "twitter": "jparr_squirrel"
+  },
+  "Jon Horton": {
+    "instagram": "J_Horton11",
+    "occupation": "Olympic Gymnast",
+    "twitter": "J_Horton11"
+  },
+  "Kacy Catanzaro": {
+    "instagram": "kacycatanzaro",
+    "occupation": "Gym Owner",
+    "twitter": "KacyCatanzaro"
+  },
+  "Karsten Williams": {
+    "instagram": "teamkarsten",
+    "occupation": "Personal Trainer",
+    "twitter": "RealTeamKarsten"
+  },
+  "Rose Wetzel": {
+    "instagram": "runningrosie",
+    "occupation": "Obstacle Course Racer",
+    "twitter": "rosewetzel"
+  },
+  "Sam Sann": {
+    "instagram": "sam_sann_",
+    "occupation": "Personal Trainer",
+    "twitter": "samsannanw"
+  },
+  "Tom Mortimer": {
+    "instagram": "",
+    "occupation": "Zookeeper",
+    "twitter": ""
   }
-]
+}
