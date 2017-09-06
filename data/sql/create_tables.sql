@@ -1,16 +1,15 @@
 /**
  * Ninja represents an individual ANW competitor.
- *
- * Note that, unlike the other columns, `age` can be NULL. This is because we
- * aren't always given a competitor's age (especially in "partially shown"
- * cases).
  */
 CREATE TABLE Ninja (
     ninja_id serial PRIMARY KEY,
     first_name text NOT NULL,
     last_name text NOT NULL,
     sex char(1) NOT NULL,
-    age integer
+    age integer,
+    occupation text,
+    instagram text,
+    twitter text
 );
 
 /**
