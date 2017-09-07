@@ -1,29 +1,17 @@
 #!/usr/bin/env python3
 import csv
+import json
 import pathlib
-import sys
 
 import records
 
-from util import (
-    query_file,
-    name_and_status,
-    is_number,
-    finish_point,
-    SEASONS,
-    TYPE_2_INT,
-    INT_2_TYPE,
-    FINISH_2_NAME
-)
-
+from util import (query_file, name_and_status, is_number, finish_point,
+                  TYPE_2_INT, FINISH_2_NAME)
 
 CSV_DATA = pathlib.Path('data/csv')
+META_DATA = pathlib.Path('data/meta.json')
 TABLES = [
-    'Ninja',
-    'Course',
-    'Obstacle',
-    'ObstacleResult',
-    'CourseResult',
+    'Ninja', 'Course', 'Obstacle', 'ObstacleResult', 'CourseResult',
     'CareerSummary'
 ]
 
@@ -49,12 +37,24 @@ def insert_ninja(db, row):
     first, last = name.split(' ', 1)
     out = db.query(
         'SELECT ninja_id FROM Ninja WHERE first_name=:f AND last_name=:l',
-        f=first, l=last).all()
+        f=first,
+        l=last).all()
 
     # TODO: What if two competitors have the same first + last name?
     if not out:
-        ninja_id = db.query_file('data/sql/insert_ninja.sql',
-            f=first, l=last, s=sex, a=age).all()[0].ninja_id
+        with open(META_DATA.absolute()) as meta:
+            data = json.load(meta)
+
+        info = data.get('{0} {1}'.format(first, last), {})
+        ninja_id = db.query_file(
+            'data/sql/insert_ninja.sql',
+            f=first,
+            l=last,
+            s=sex,
+            a=age,
+            o=info.get('occupation'),
+            i=info.get('instagram'),
+            t=info.get('twitter')).all()[0].ninja_id
     else:
         ninja_id = out[0].ninja_id
 
@@ -73,8 +73,8 @@ def insert_course(db, headings, info):
     """
     city = info[0] if info[0] != 'Stage' else 'Las Vegas'
     cat = info[1] if not is_number(info[1]) else 'Stage ' + info[1]
-    course_id = db.query_file('data/sql/insert_course.sql',
-            city=city, cat=cat, s=info[2]).all()
+    course_id = db.query_file(
+        'data/sql/insert_course.sql', city=city, cat=cat, s=info[2]).all()
     return course_id[0].course_id
 
 
@@ -124,7 +124,9 @@ def insert_obstacle_results(db, row, nid, cid, shown, headings):
                 """
                 SELECT obstacle_id FROM Obstacle
                 WHERE (title=:title AND course_id=:id)
-                """, title=name, id=cid).all()
+                """,
+                title=name,
+                id=cid).all()
             # Given that the current header is 'Gender' or 'Transition', we
             # know that the value at the next column will be the time.
             time = row[i + 1]
@@ -140,8 +142,12 @@ def insert_obstacle_results(db, row, nid, cid, shown, headings):
             else:
                 transition = row[i]
                 i += 2
-            db.query_file('data/sql/insert_obstacle_result.sql', nid=nid,
-                dur=time, trans=transition, comp=completed,
+            db.query_file(
+                'data/sql/insert_obstacle_result.sql',
+                nid=nid,
+                dur=time,
+                trans=transition,
+                comp=completed,
                 obsid=out[0].obstacle_id)
         else:
             i += 1
@@ -160,14 +166,20 @@ def insert_course_result(db, row, cid, nid, shown, obstacles):
     # completed is the last column.
     completed = row[-1] == 'Completed'
 
-    results = db.query_file('data/sql/obstacles_by_ninja.sql',
-        nid=nid, comp=completed, crid=cid).all()[0].count
+    results = db.query_file(
+        'data/sql/obstacles_by_ninja.sql', nid=nid, comp=completed,
+        crid=cid).all()[0].count
 
     # Calculate the finish point.
     finish = finish_point(row, shown, results, obstacles, completed)
 
-    db.query_file('data/sql/insert_course_result.sql',
-        crid=cid, nid=nid, dur=time, fp=finish, comp=completed).all()
+    db.query_file(
+        'data/sql/insert_course_result.sql',
+        crid=cid,
+        nid=nid,
+        dur=time,
+        fp=finish,
+        comp=completed).all()
 
 
 def insert_summary(db):
@@ -200,11 +212,14 @@ def insert_summary(db):
             finish_scores[type_idx] += int_type + point
             trend.append(point)
 
-            # Record the fastest competitor's on each obstacle for this course.
+            # Record the fastest competitors on each obstacle for this course.
             obs = query_file(db, 'obstacles_by_course.sql', id=ret.course_id)
             for ob in obs:
-                leaders = [l.ninja_id for l in query_file(db, 'leaders.sql',
-                    obs_id=ob.obstacle_id)]
+                leaders = [
+                    l.ninja_id
+                    for l in query_file(
+                        db, 'leaders.sql', obs_id=ob.obstacle_id)
+                ]
                 if ninja_id in leaders:
                     places.append(leaders.index(ninja_id) + 1)
                 else:
@@ -212,7 +227,9 @@ def insert_summary(db):
 
         total = sum(trend) if trend else 0
         n_seasons = len(seasons)
-        summary_id = query_file(db, 'insert_summary.sql',
+        summary_id = query_file(
+            db,
+            'insert_summary.sql',
             nid=ninja_id,
             best=FINISH_2_NAME.get(max(finishes)),
             speed=3 * sum(x > 0 for x in places) - (sum(places) / len(places)),
@@ -250,10 +267,10 @@ if __name__ == '__main__':
             insert_obstacles(db, headings, course_info, course_id)
             for i, row in enumerate(rows):
                 shown, ninja_id = insert_ninja(db, row)
-                insert_obstacle_results(
-                    db, row, ninja_id, course_id, shown, headings)
-                insert_course_result(
-                    db, row, course_id, ninja_id, shown, obstacles)
+                insert_obstacle_results(db, row, ninja_id, course_id, shown,
+                                        headings)
+                insert_course_result(db, row, course_id, ninja_id, shown,
+                                     obstacles)
 
     print('Inserting summaries ...')
     insert_summary(db)
