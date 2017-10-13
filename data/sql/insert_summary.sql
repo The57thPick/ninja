@@ -7,10 +7,11 @@ INSERT INTO CareerSummary(
     speed,
     success,
     consistency,
+    rating,
     seasons,
     qualifying,
     finals,
     stages
 )
-VALUES (:nid, :best, :speed, :success, :consistency, :seasons, :q, :f, :s)
+VALUES (:nid, :best, :speed, :success, :consistency, :rating, :seasons, :q, :f, :s)
 RETURNING summary_id;
