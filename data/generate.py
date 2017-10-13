@@ -227,14 +227,20 @@ def insert_summary(db):
 
         total = sum(trend) if trend else 0
         n_seasons = len(seasons)
+
+        speed = round(3 * sum(x > 0 for x in places) - (sum(places) / len(places)), 3)
+        success = 4 * max(finish_scores)
+        consistency=total * n_seasons
+
         summary_id = query_file(
             db,
             'insert_summary.sql',
             nid=ninja_id,
             best=FINISH_2_NAME.get(max(finishes)),
-            speed=3 * sum(x > 0 for x in places) - (sum(places) / len(places)),
-            success=4 * max(finish_scores),
-            consistency=total * n_seasons,
+            speed=speed,
+            success=success,
+            consistency=consistency,
+            rating=round(speed + success + consistency, 3),
             seasons=n_seasons,
             q=completes[0],
             f=completes[1],

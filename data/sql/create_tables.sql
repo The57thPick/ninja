@@ -77,6 +77,7 @@ CREATE TABLE CareerSummary (
     speed decimal NOT NULL,
     success decimal NOT NULL,
     consistency decimal NOT NULL,
+    rating decimal NOT NULL,
     seasons integer NOT NULL,
     qualifying integer NOT NULL,
     finals integer NOT NULL,
