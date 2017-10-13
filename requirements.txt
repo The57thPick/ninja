@@ -1,1 +1,2 @@
 records>=0.5.0
+psycopg2>=2.7.3
