@@ -10,4 +10,4 @@ script:
 after_success:
     # Update the database on tags.
     # $DATABASE_URL is set as an environment variable on Travis CI.
-  - test -n "$TRAVIS_TAG" && python generate.py
+  - test -n "$TRAVIS_TAG" && python data/generate.py
