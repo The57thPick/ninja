@@ -42,7 +42,7 @@ def insert_ninja(db, row):
 
     # TODO: What if two competitors have the same first + last name?
     if not out:
-        with open(META_DATA.absolute()) as meta:
+        with META_DATA.open() as meta:
             data = json.load(meta)
 
         info = data.get('{0} {1}'.format(first, last), {})
